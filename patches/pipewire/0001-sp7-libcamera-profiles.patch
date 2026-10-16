@@ -181,7 +181,7 @@ index 2d6532f82..bf2f93c63 100644
  
  		oinfo = SPA_DEVICE_OBJECT_INFO_INIT();
 diff --git a/spa/plugins/libcamera/libcamera-source.cpp b/spa/plugins/libcamera/libcamera-source.cpp
-index 1eae21812..89bad19f4 100644
+index 1eae21812..47ffc904c 100644
 --- a/spa/plugins/libcamera/libcamera-source.cpp
 +++ b/spa/plugins/libcamera/libcamera-source.cpp
 @@ -125,6 +125,14 @@ struct impl {
@@ -255,7 +255,7 @@ index 1eae21812..89bad19f4 100644
 +		impl->config->sensorConfig &&
 +		impl->config->sensorConfig->outputSize == Size(1632, 918);
 +
-+	
++
 +        const bool sp7FrontStandardEnum =
 +                impl->config->sensorConfig &&
 +                impl->config->sensorConfig->outputSize == Size(1296, 972);
@@ -730,7 +730,7 @@ index 1eae21812..89bad19f4 100644
 +			spa_log_info(log,
 +				     "SP7 profile %s: sensor 1632x918 full-FOV test",
 +				     sp7Profile);
-+		
++
 +           } else if (spa_streq(sp7Profile, "front-standard")) {
 +                   sensorConfig.outputSize = libcamera::Size(1296, 972);
 +                   config->sensorConfig = sensorConfig;
