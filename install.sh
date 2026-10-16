@@ -397,7 +397,7 @@ else
         mokutil \
         v4l-utils \
         gstreamer1 \
-        gstreamer1-tools \
+        gstreamer1-plugins-base-tools \
         gstreamer1-plugins-base
 fi
 
