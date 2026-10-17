@@ -1100,6 +1100,18 @@ install \
     "$ROOT/config/wireplumber/wireplumber.conf.d/99-sp7-three-rear-names.conf" \
     "$WP_DIR/99-sp7-three-rear-names.conf"
 
+install \
+    -m 0644 \
+    "$ROOT/config/wireplumber/wireplumber.conf.d/98-sp7-camera-seat.conf" \
+    "$WP_DIR/98-sp7-camera-seat.conf"
+
+WP_SCRIPTS="${XDG_DATA_HOME:-$HOME/.local/share}/wireplumber/scripts/sp7"
+mkdir -p "$WP_SCRIPTS"
+install \
+    -m 0644 \
+    "$ROOT/config/wireplumber/scripts/sp7/libcamera-seat-monitor.lua" \
+    "$WP_SCRIPTS/libcamera-seat-monitor.lua"
+
 for file in \
     90-sp7-libcamera-test.conf \
     95-sp7-softisp-vflip.conf \
