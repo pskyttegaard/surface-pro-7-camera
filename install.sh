@@ -1116,6 +1116,13 @@ install \
     "$ROOT/config/wireplumber/scripts/sp7/libcamera-seat-monitor.lua" \
     "$WP_SCRIPTS/libcamera-seat-monitor.lua"
 
+# Keep the ALC274 hardware mixer at the known-good microphone gain.
+# WirePlumber still controls source/sink volume in software.
+install \
+    -m 0644 \
+    "$ROOT/config/wireplumber/wireplumber.conf.d/99-sp7-audio-soft-mixer.conf" \
+    "$WP_DIR/99-sp7-audio-soft-mixer.conf"
+
 for file in \
     90-sp7-libcamera-test.conf \
     95-sp7-softisp-vflip.conf \
@@ -1140,6 +1147,32 @@ install \
 
 systemctl --user daemon-reload
 systemctl --user enable sp7-camera-controller.service
+
+# Surface Pro 7 ALC274 hardware mixer fix.
+# The helper sets Internal Mic Boost to the known-good 0 dB and keeps
+# the hardware playback Master at 100% / 0 dB / unmuted.
+# The WirePlumber soft-mixer rule above prevents later PipeWire volume
+# restoration from changing these hardware mixer values.
+# The helper is non-fatal if the expected ALSA card/control is absent.
+sudo install -Dm755 \
+    "$ROOT/src/sp7-audio-fix" \
+    /usr/local/libexec/sp7-audio-fix
+
+install -Dm644 \
+    "$ROOT/systemd/user/sp7-audio-fix.service" \
+    "$USER_SYSTEMD/sp7-audio-fix.service"
+
+systemctl --user daemon-reload
+systemctl --user enable sp7-audio-fix.service
+
+# WirePlumber reads static configuration fragments only at startup.
+# Restart it so the ALC274 soft-mixer rule takes effect immediately.
+systemctl --user restart wireplumber.service
+
+# Establish the known-good hardware mixer value after WirePlumber has
+# restarted. This is also required when updating an existing installation
+# where the oneshot service may already be active.
+systemctl --user restart sp7-audio-fix.service
 
 # -------------------------------------------------------------------------
 # Final static verification
