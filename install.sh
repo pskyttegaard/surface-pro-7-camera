@@ -721,6 +721,14 @@ apply_patch \
     "$LIBCAMERA_SRC" \
     "$ROOT/patches/libcamera/0001-sp7-camera.patch"
 
+apply_patch \
+    "$LIBCAMERA_SRC" \
+    "$ROOT/patches/libcamera/0002-sp7-front-prequeue-capture.patch"
+
+apply_patch \
+    "$LIBCAMERA_SRC" \
+    "$ROOT/patches/libcamera/0003-sp7-front-capture-metadata.patch"
+
 [[ -f "$LIBCAMERA_SRC/src/ipa/simple/data/ov8865.yaml" ]] \
     || die "OV8865 tuning file is missing from the libcamera patch."
 
@@ -813,6 +821,22 @@ fetch_commit \
 apply_patch \
     "$PIPEWIRE_SRC" \
     "$ROOT/patches/pipewire/0001-sp7-libcamera-profiles.patch"
+
+apply_patch \
+    "$PIPEWIRE_SRC" \
+    "$ROOT/patches/pipewire/0002-sp7-front-standard-native-orientation.patch"
+
+apply_patch \
+    "$PIPEWIRE_SRC" \
+    "$ROOT/patches/pipewire/0003-sp7-front-standard-client-orientation.patch"
+
+apply_patch \
+    "$PIPEWIRE_SRC" \
+    "$ROOT/patches/pipewire/0004-sp7-front-hq-client-orientation.patch"
+
+apply_patch \
+    "$PIPEWIRE_SRC" \
+    "$ROOT/patches/pipewire/0005-sp7-prefer-memfd-buffers.patch"
 
 SP7_ORIGINAL_PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}"
 
