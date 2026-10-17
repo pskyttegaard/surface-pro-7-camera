@@ -729,6 +729,10 @@ apply_patch \
     "$LIBCAMERA_SRC" \
     "$ROOT/patches/libcamera/0003-sp7-front-capture-metadata.patch"
 
+apply_patch \
+    "$LIBCAMERA_SRC" \
+    "$ROOT/patches/libcamera/0004-sp7-rear-cold-exposure.patch"
+
 [[ -f "$LIBCAMERA_SRC/src/ipa/simple/data/ov8865.yaml" ]] \
     || die "OV8865 tuning file is missing from the libcamera patch."
 

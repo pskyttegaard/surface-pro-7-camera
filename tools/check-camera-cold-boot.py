@@ -23,6 +23,17 @@ def command(*arguments):
 
 
 def snapshot():
+    # Observe cached sensor settings only; never set a control. These values
+    # are not necessarily the exposure used by the frame currently in flight.
+    rear_controls = {}
+    for name in Path('/sys/class/video4linux').glob('v4l-subdev*/name'):
+        if name.read_text().strip().startswith('ov8865 '):
+            device = '/dev/' + name.parent.name
+            query = subprocess.run(['v4l2-ctl', '-d', device, '--get-ctrl',
+                                    'exposure,analogue_gain'], text=True,
+                                   capture_output=True, timeout=5)
+            rear_controls = dict(device=device, returncode=query.returncode,
+                                 output=query.stdout, error=query.stderr)
     nodes = [entry['info']['props'] for entry in json.loads(command('pw-dump'))
              if entry.get('type') == 'PipeWire:Interface:Node' and 'info' in entry]
     sources = [node for node in nodes if node.get('media.class') == 'Video/Source']
@@ -58,7 +69,8 @@ def snapshot():
                 and properties.get('Class') == 'user' and properties.get('Active') == 'yes'
                 and properties.get('Type') in ['wayland', 'x11']):
             sessions.append(session_id)
-    return dict(active_local_graphical_sessions=sessions, utc=datetime.now(timezone.utc).isoformat(),
+    return dict(rear_cached_controls=rear_controls,
+                active_local_graphical_sessions=sessions, utc=datetime.now(timezone.utc).isoformat(),
                 boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
                 logical_profiles=dict(logical),
                 unexpected_raw_ipu_sources=raw_ipu, services=services)
