@@ -1,0 +1,254 @@
+#!/usr/bin/python3
+"""Gate the existing RTSP capture child on local seat ownership and source presence."""
+import argparse
+import json
+import logging
+import os
+from pathlib import Path
+import signal
+import socket
+import subprocess
+import tempfile
+import time
+
+NODE = 'sp7.front.standard'
+
+
+def eligible_session(properties, uid):
+    """Do not trust inherited XDG_SESSION_ID or a remote session's active state."""
+    return (properties.get('User', (None,))[0] == uid
+            and properties.get('Seat', ('',))[0] == 'seat0'
+            and properties.get('Active') is True
+            and properties.get('Remote') is False
+            and properties.get('Class') == 'user'
+            and properties.get('Type') in ('wayland', 'x11')
+            and properties.get('State') == 'active')
+
+
+def has_front_source(objects):
+    for obj in objects:
+        if obj.get('type') != 'PipeWire:Interface:Node':
+            continue
+        props = (obj.get('info') or {}).get('props') or {}
+        if props.get('node.name') == NODE and props.get('media.class') == 'Video/Source':
+            return True
+    return False
+
+
+class Backend:
+    """Read-only logind/systemd queries; connect to PipeWire only after the seat gate."""
+    def __init__(self):
+        from gi.repository import Gio, GLib
+        self.Gio, self.GLib = Gio, GLib
+        self.system_bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
+        self.user_bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        self.uid = os.getuid()
+
+    def call(self, bus, destination, path, interface, method, signature=None, values=None):
+        params = self.GLib.Variant(signature, values) if signature else None
+        return bus.call_sync(destination, path, interface, method, params, None,
+                             self.Gio.DBusCallFlags.NONE, 1500, None).unpack()[0]
+
+    def unit_active(self, unit):
+        path = self.call(self.user_bus, 'org.freedesktop.systemd1',
+                         '/org/freedesktop/systemd1', 'org.freedesktop.systemd1.Manager',
+                         'GetUnit', '(s)', (unit,))
+        return self.call(self.user_bus, 'org.freedesktop.systemd1', path,
+                         'org.freedesktop.DBus.Properties', 'Get', '(ss)',
+                         ('org.freedesktop.systemd1.Unit', 'ActiveState')) == 'active'
+
+    def session(self):
+        try:
+            if not self.unit_active('graphical-session.target'):
+                return False
+            sessions = self.call(self.system_bus, 'org.freedesktop.login1',
+                                 '/org/freedesktop/login1', 'org.freedesktop.login1.Manager',
+                                 'ListSessions')
+            for _, uid, _, seat, path in sessions:
+                if uid != self.uid or seat != 'seat0':
+                    continue
+                props = self.call(self.system_bus, 'org.freedesktop.login1', path,
+                                  'org.freedesktop.DBus.Properties', 'GetAll', '(s)',
+                                  ('org.freedesktop.login1.Session',))
+                if eligible_session(props, self.uid):
+                    return True
+        except Exception as error:
+            logging.debug('Session query unavailable: %s', error)
+        return False
+
+    def source(self):
+        try:
+            # Checking service state does not start it. Never request activation or
+            # recovery of either media service, even if discovery is unavailable.
+            if not all(self.unit_active(u) for u in ('pipewire.service', 'wireplumber.service')):
+                return False
+            env = dict(os.environ, PIPEWIRE_RUNTIME_DIR=f'/run/user/{self.uid}')
+            result = subprocess.run(['/usr/bin/pw-dump', '--remote=pipewire-0'],
+                                    env=env, capture_output=True, text=True, timeout=2,
+                                    check=True)
+            return has_front_source(json.loads(result.stdout))
+        except Exception as error:
+            logging.debug('Source query unavailable: %s', error)
+            return False
+
+
+class CaptureChild:
+    """A private notify socket distinguishes capture readiness from process startup."""
+    def __init__(self, server, runtime_dir=None):
+        self.server = server
+        self.runtime_dir = runtime_dir or f'/run/user/{os.getuid()}'
+        self.process = None
+        self.directory = None
+        self.notify = None
+
+    def start(self):
+        try:
+            self.directory = tempfile.TemporaryDirectory(prefix='sp7-rtsp-',
+                                                         dir=self.runtime_dir)
+            self.notify = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+            self.notify.bind(str(Path(self.directory.name) / 'notify'))
+            self.notify.setblocking(False)
+            # PipeWire applies PIPEWIRE_PROPS to this child's stream only.
+            # Refuse fallback/movement if the node disappears after our snapshot.
+            env = dict(os.environ, NOTIFY_SOCKET=str(Path(self.directory.name) / 'notify'),
+                       PIPEWIRE_RUNTIME_DIR=f'/run/user/{os.getuid()}',
+                       PIPEWIRE_REMOTE='pipewire-0', PIPEWIRE_NODE=NODE,
+                       PIPEWIRE_AUTOCONNECT='true',
+                       PIPEWIRE_PROPS=f'target.object={NODE} node.dont-fallback=true '
+                                      'node.dont-move=true node.dont-reconnect=true')
+            self.process = subprocess.Popen(['/usr/bin/python3', str(self.server)], env=env)
+        except Exception:
+            self.stop()
+            raise
+
+    def poll(self):
+        return self.process.poll()
+
+    def ready(self):
+        while True:
+            try:
+                message = self.notify.recv(8192).decode(errors='replace')
+            except BlockingIOError:
+                return False
+            if 'READY=1' in message.splitlines():
+                return True
+
+    def stop(self):
+        if self.process is not None:
+            if self.process.poll() is None:
+                self.process.terminate()
+                try:
+                    self.process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self.process.kill()
+                    self.process.wait(timeout=2)
+            self.process = None
+        if self.notify is not None:
+            self.notify.close()
+            self.notify = None
+        if self.directory is not None:
+            self.directory.cleanup()
+            self.directory = None
+
+
+class Guard:
+    def __init__(self, backend, child, clock=time.monotonic):
+        self.backend, self.child, self.clock = backend, child, clock
+        self.running = False
+        self.streaming = False
+        self.started = 0
+        self.failures = 0
+        self.retry_at = 0
+        self.state = None
+
+    def status(self, state, detail=''):
+        if state != self.state:
+            logging.info('%s%s', state, ': ' + detail if detail else '')
+            self.state = state
+
+    def stop(self):
+        if self.running:
+            self.child.stop()
+        self.running = False
+        self.streaming = False
+
+    def lost(self, waiting):
+        if self.running:
+            logging.info('session/source lost, stopping capture')
+        self.stop()
+        self.failures, self.retry_at = 0, 0
+        self.status(waiting)
+
+    def failed(self, detail):
+        self.stop()
+        self.failures += 1
+        delay = min(5 * 2 ** (self.failures - 1), 60)
+        self.retry_at = self.clock() + delay
+        self.status('capture child failed/backoff', detail + f'; attempt {self.failures}/5')
+        logging.info('Retry delay %ss%s', delay,
+                     '; retries exhausted until session/source transition or manual restart'
+                     if self.failures >= 5 else '')
+
+    def step(self):
+        if not self.backend.session():
+            self.lost('waiting for eligible local session')
+            return
+        if not self.backend.source():
+            self.lost('waiting for Front Standard source')
+            return
+        now = self.clock()
+        if self.running:
+            result = self.child.poll()
+            if result is not None:
+                self.failed(f'exit status {result}')
+            elif not self.streaming and now - self.started > 45:
+                self.failed('capture readiness timed out')
+            elif not self.streaming and self.child.ready():
+                self.streaming = True
+                self.status('streaming')
+            elif self.streaming and now - self.started >= 60:
+                self.failures = 0
+            return
+        if self.failures >= 5 or now < self.retry_at:
+            return
+        # Recheck seat ownership immediately before any capture attempt. All
+        # capture still uses the existing server's one named PipeWire source.
+        if not self.backend.session():
+            self.lost('waiting for eligible local session')
+            return
+        try:
+            self.child.start()
+            self.running = True
+            self.started = now
+            self.status('starting Front Standard capture')
+        except Exception as error:
+            self.failed(str(error))
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--server', type=Path, required=True)
+    args = parser.parse_args()
+    if not args.server.is_file():
+        parser.error('existing RTSP server file is missing')
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+    guard = Guard(Backend(), CaptureChild(args.server))
+    stopping = False
+
+    def stop_requested(signum, frame):
+        nonlocal stopping
+        stopping = True
+
+    for signum in (signal.SIGTERM, signal.SIGINT):
+        signal.signal(signum, stop_requested)
+    try:
+        while not stopping:
+            guard.step()
+            time.sleep(2)
+    finally:
+        guard.stop()
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
