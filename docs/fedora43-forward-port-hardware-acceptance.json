@@ -2,7 +2,7 @@
   "date": "2026-10-18",
   "candidate_commit": "6b2a2047cf3ed5f57ad4aac28dbcc5a62c012050",
   "branch": "codex/camera-fedora43-forward-port",
-  "status": "Hardware accepted by Peter; all-pass automated report differs from preserved artifact",
+  "status": "Hardware accepted by Peter; original 337/338 regression retained; later 130/130 follow-up independently verified",
   "runtime_architecture": {
     "kernel": "6.19.8-3.surface.fc43.x86_64",
     "camera_prefix": "/home/peter/.local/lib/sp7-camera-userspace/f43-20261018",
@@ -44,11 +44,16 @@
     "raw_ipu_exposed_as_video_sources": false,
     "gnome_camera_before_reboot": "passed: availability, quick startup, orientation, colors, switching",
     "automated_regression": {
-      "rounds": 26,
-      "all_captures_passed": true,
-      "paired_frames_per_capture": 20,
-      "timestamp_regressions": 0,
-      "invalid_timestamps": 0
+      "initial_rounds": 26,
+      "initial_capture_count": 338,
+      "initial_passed_capture_count": 337,
+      "initial_all_captures_passed": false,
+      "follow_up_rounds": 10,
+      "follow_up_capture_count": 130,
+      "follow_up_all_captures_passed": true,
+      "follow_up_paired_frames_per_capture": 20,
+      "timestamp_regressions_both_runs": 0,
+      "invalid_timestamps_both_runs": 0
     },
     "reboot_persistence": "passed: unchanged kernel, active media services, five profiles, correct private/Fedora mappings, GNOME Camera passed again",
     "rtsp": "disabled and inactive throughout"
@@ -72,7 +77,7 @@
       "error": "capture timed out",
       "paired_frames": 1
     },
-    "qualification": "Artifact is not all-pass; later all-pass result requested; operator acceptance and artifact are distinguished."
+    "qualification": "Original 337/338 result retained unchanged, including one Front Standard timeout; later all-pass follow-up recorded separately."
   },
   "read_only_cleanup_checks": {
     "all_13_packages_match_target": true,
@@ -84,5 +89,28 @@
   },
   "separate_audio_acceptance_reported": false,
   "rollback_bundle": "/home/peter/sp7-forward-port/f43-20261018",
-  "cleanup_behavior_change": false
+  "cleanup_behavior_change": false,
+  "independently_inspected_follow_up": {
+    "path": "/home/peter/sp7-forward-port/f43-20261018/validation-front-standard-retry/summary.json",
+    "sha256": "fa3f9b308dc8a8aef5bfe71812f81ccf6519e4714ba2a729b4ef4327df692617",
+    "command": "python3 /home/peter/surface-pro-7-camera/tools/check-camera-profiles.py --output /home/peter/sp7-forward-port/f43-20261018/validation-front-standard-retry --format RGBA --sync --rounds 10",
+    "rounds": 10,
+    "complete": true,
+    "passed": true,
+    "capture_count": 130,
+    "passed_capture_count": 130,
+    "errors": 0,
+    "timestamp_regressions": 0,
+    "invalid_timestamps": 0,
+    "paired_frames_per_capture": 20,
+    "total_paired_frames": 2600,
+    "captures_by_profile": {
+      "sp7.front.standard": 40,
+      "sp7.front.hq": 30,
+      "sp7.rear.standard": 20,
+      "sp7.rear.hq": 20,
+      "sp7.rear.fast": 20
+    },
+    "qualification": "Separate later follow-up after investigation of the original timeout; no runtime or source change made by this documentation update."
+  }
 }

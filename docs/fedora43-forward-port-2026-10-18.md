@@ -1,8 +1,8 @@
 # Fedora 43 capture-host forward port — 2026-10-18
 
 Status: **deployed and accepted on Surface Pro 7 hardware**, including reboot
-persistence, as reported by Peter on 2026-10-18. The preserved automated
-artifact has one timeout; see the evidence qualification below.
+persistence, as reported by Peter on 2026-10-18. The original regression had
+one timeout; a later 10-round follow-up passed all 130 cases, as verified below.
 Branch: `codex/camera-fedora43-forward-port`, based on PR #1 head
 `2eb4916295a9090694fca7cdb84d66c4db2b9e06`. The published PR and its
 branch remain unchanged. The working installation now uses this forward port.
@@ -98,7 +98,8 @@ The complete reviewed deployment is preserved at
   `branch-metadata.json`, and `evidence/` with original build/solver records;
 - `operator-state/` with pre-deployment file backups and service state;
 - `DEPLOY.md`, `ROLLBACK.md`, `verify-bundle.py` and `operator-state.py`;
-- `validation-profile-check/` with local capture results and images.
+- `validation-profile-check/` and `validation-front-standard-retry/` with the
+  original and follow-up capture results and images.
 
 Do not commit RPM binaries, camera images, raw debug logs, extracted build trees,
 user backups or the deployment archive to Git. The branch retains source/config,
@@ -219,9 +220,10 @@ Reported acceptance:
    Raw IPU devices remained devices, not exposed video sources.
 3. GNOME Camera passed before reboot: expected profiles, quick startup, correct
    orientation, acceptable colors and successful switching.
-4. Peter reports an all-pass automated regression over 26 rounds, 20 paired frames
-   per capture, zero timestamp regressions and zero invalid timestamps. The local
-   evidence qualification below must accompany this report.
+4. The initial 26-round regression passed 337/338 captures, with one Front
+   Standard timeout. A later 10-round follow-up passed all 130 captures, including
+   40 Front Standard captures. Both runs have zero timestamp regressions and zero
+   invalid timestamps; every follow-up capture has 20 paired frames.
 5. Reboot persistence passed: same Surface kernel, active PipeWire/WirePlumber,
    five restored logical profiles, private camera libraries and Fedora core
    libraries still correctly separated; GNOME Camera passed again.
@@ -240,15 +242,28 @@ The preserved `validation-profile-check/summary.json` currently reports
 and one Front Standard RGBA timeout at zero-based case index 276. The passing
 captures have 20 paired frames each; the timeout has one black paired frame.
 All 338 captures report zero timestamp regressions and zero invalid timestamps.
-This file therefore does **not** substantiate an all-pass run. Peter's hardware
-acceptance is recorded as reported, separately from this inspected artifact;
-a later all-pass result has been requested. No artifact has been rewritten or
-silently excluded. The compact JSON acceptance record includes the summary hash.
+The original result remains a 337/338 run; it is not rewritten as all-pass.
+
+After investigating that timeout, Peter ran this separate follow-up:
+
+```sh
+python3 /home/peter/surface-pro-7-camera/tools/check-camera-profiles.py --output /home/peter/sp7-forward-port/f43-20261018/validation-front-standard-retry --format RGBA --sync --rounds 10
+```
+
+The later `validation-front-standard-retry/summary.json` independently verifies
+`complete: true`, `passed: true`: **130/130 captures**, including 40 repeated
+Front Standard, 30 Front HQ, and 20 each Rear Standard/HQ/Fast. Every capture has
+`passed: true`, `error: null`, zero timestamp regressions, zero invalid timestamps
+and 20 paired frames (2,600 pairs total). This follow-up supports acceptance while
+retaining the original timeout as historical evidence; it does not establish a
+root cause or a source fix. Neither result was modified. The compact acceptance
+record includes both summary paths and SHA256 hashes.
 
 ### Remaining follow-up
 
-- Reconcile the single-timeout artifact with the reported all-pass run; retain the
-  final regression summary when available. No camera behavior is changed here.
+- The original isolated timeout remains in the historical record. The later
+  all-pass follow-up is verified; no root cause is established by these results.
+  Investigate further only if it recurs; no camera behavior is changed here.
 - Audio playback/microphone testing was in the operator plan, but a separate audio
   acceptance result was not supplied in the camera acceptance report.
 - The inspection source builds remain intentionally different from full Fedora
