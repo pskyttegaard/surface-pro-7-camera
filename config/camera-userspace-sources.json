@@ -1,0 +1,17 @@
+{
+  "libcamera": {
+    "url": "https://gitlab.freedesktop.org/camera/libcamera.git",
+    "commit": "191e202178f02430b5942397c70d215cdd2056fa",
+    "version": "0.7.2"
+  },
+  "pipewire": {
+    "url": "https://gitlab.freedesktop.org/pipewire/pipewire.git",
+    "commit": "255541eac34370e312f0c5c8c18e46dc1911352f",
+    "version": "1.4.11"
+  },
+  "wireplumber": {
+    "url": "https://gitlab.freedesktop.org/pipewire/wireplumber.git",
+    "commit": "07e730b279ac7a520699ae9f6b0797848a731b30",
+    "version": "0.5.14"
+  }
+}

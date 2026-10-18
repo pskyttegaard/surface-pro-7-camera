@@ -1,0 +1,326 @@
+{
+  "date": "2026-10-18",
+  "base_pr_head": "2eb4916295a9090694fca7cdb84d66c4db2b9e06",
+  "deployed": false,
+  "hardware_tested": false,
+  "sources": {
+    "libcamera": {
+      "url": "https://gitlab.freedesktop.org/camera/libcamera.git",
+      "commit": "191e202178f02430b5942397c70d215cdd2056fa",
+      "version": "0.7.2"
+    },
+    "pipewire": {
+      "url": "https://gitlab.freedesktop.org/pipewire/pipewire.git",
+      "commit": "255541eac34370e312f0c5c8c18e46dc1911352f",
+      "version": "1.4.11"
+    },
+    "wireplumber": {
+      "url": "https://gitlab.freedesktop.org/pipewire/wireplumber.git",
+      "commit": "07e730b279ac7a520699ae9f6b0797848a731b30",
+      "version": "0.5.14"
+    }
+  },
+  "builds_complete": true,
+  "camera_files": {
+    "bin/libcamerify": "0a1c59e665ac3ae86cd33ad417f2a48119ffd753307e84ad1c9194aed94f53b9",
+    "bin/libcamera-bug-report": "11aa06fb18270647f41d6f9a73b99842ab1787dc9b7eee1d9f5c1082a2a4b1ae",
+    "bin/cam": "4fe786a4aa80e93dc78920954576ee9088e9a5acd8dc384c1cf82824c69fb3d8",
+    "lib64/libcamera.so.0.7.2": "187274386afef0ae21704eb863e43afd6692185cb097495209d2a3b6325d50b0",
+    "lib64/libcamera-base.so.0.7.2": "fef2f0f934cd59fa36d4b93d401545118fbe54baf58ed2dac96487666135e3ab",
+    "include/libcamera/libcamera/version.h": "9968c16edb7d6d14f87c665155be0fc9c4ab4f4c1b1b9f118b16897b329e9581",
+    "include/libcamera/libcamera/transform.h": "148c6e2d81b45f61d32acb63a90f9616cc504c37dc8fabd3afa1c297e89e7be8",
+    "include/libcamera/libcamera/stream.h": "584dc93c4826bb0c7ae27ca47260521d329c660b55efda92577d467dc2216345",
+    "include/libcamera/libcamera/request.h": "7a6e5454e6ea69f4a90e9459656e1cbd8dae0ff1253989be7be49392912ac863",
+    "include/libcamera/libcamera/pixel_format.h": "be6b9e243c098b0eb9f896e2909fdc34dc07048ac80bf08362a82fa4ebcff07d",
+    "include/libcamera/libcamera/orientation.h": "17f75e9be250c67e8a0224bcbdf938dc4bb9f27af5976154309be8c541f3c058",
+    "include/libcamera/libcamera/logging.h": "083684a85d236e1cb8fc6d42d9ba6df090d069b313620d3e766d904923318bf1",
+    "include/libcamera/libcamera/geometry.h": "864ec080e743f527ae84330da411d6772151e2e6f16dbca63b20c82889f90edf",
+    "include/libcamera/libcamera/framebuffer_allocator.h": "9ae5c47485d2092a2ede802ff4b17320b998b661460bc0ad82a750071506d37e",
+    "include/libcamera/libcamera/framebuffer.h": "00b497df084526c76512439c916cf76ca6cf4bd32af3a78ba39afda590c7aa9b",
+    "include/libcamera/libcamera/fence.h": "6eb2a01b5aee7a970c424635a40a1a13e217ebd5a65fee0ccfc08406114c6038",
+    "include/libcamera/libcamera/controls.h": "7da475523dd6adc5b8d71c11da65ec3431217c54e5be80bfeee29a0b9b5fac72",
+    "include/libcamera/libcamera/color_space.h": "06a720eaff092f437bdf435db7fe2febc4f90606d376a7afbce2d01c7ca5e075",
+    "include/libcamera/libcamera/camera_manager.h": "ed92065a49fb68cc662685ee5b70eaee0edc0641701d747a8f579fd6d87349a9",
+    "include/libcamera/libcamera/camera.h": "b6fb18fd194d711b345d8b7c44ff757600fa88d48d36cc52b6fc6e0d68fbc45a",
+    "include/libcamera/libcamera/libcamera.h": "498f34587353a546120a675d418abd2273d75f00339177432dc8d4a9d938cf58",
+    "include/libcamera/libcamera/formats.h": "c27d55d7fd52c2107ab7cdeccb033e3f4d99419c1b16e6cdf0d6d9dadfc6e58f",
+    "include/libcamera/libcamera/property_ids.h": "392f0adfa26a26342d34556c79cc2a24c5889cb5c6f269db443e584ad184ce6a",
+    "include/libcamera/libcamera/control_ids.h": "cda48dc6fabcbe36519f6f61b3fb6b9ba8ff00af45808103e7a85be378e84b6d",
+    "include/libcamera/libcamera/base/unique_fd.h": "93bda1fb7336feca78347d322346086decc2647769e4718b57efa77c75af3033",
+    "include/libcamera/libcamera/base/span.h": "5a21c34342bf6d98fa30f2100e7ca8b6f769d719d4dcc926b89705228348b55e",
+    "include/libcamera/libcamera/base/signal.h": "2a92e5c5d05605af30707ad85d2df01d2c1a2899e950a3378a9836a81b957be0",
+    "include/libcamera/libcamera/base/shared_fd.h": "b1ff014e6a97b25e45476d794deea51f6f0dbaa7ad9883e6340f468fdb347055",
+    "include/libcamera/libcamera/base/object.h": "89f1f3fcfba72129f0f62f382b904297063ca41de2dcd96783830fa6890794d1",
+    "include/libcamera/libcamera/base/flags.h": "9364bdc32c4b76b16839be8d6fb3339bee6748ff0be53300cc2a977a95191931",
+    "include/libcamera/libcamera/base/class.h": "01ff972ba3680e1ed387d0c953c4768d960489510c7bcea15b613d4412fbea0c",
+    "include/libcamera/libcamera/base/bound_method.h": "5b4901a2e90a81ba39564582817cec7db3d2d471ce34edb753c879bdf2b36ba5",
+    "include/libcamera/libcamera/ipa/ipa_module_info.h": "831ee2e5cf71396a618f5b818bff45aaeedffd48466b9c14277f63ca0e1a966b",
+    "include/libcamera/libcamera/ipa/ipa_interface.h": "4f826821d3a543063b6956a2c268102bef927656741d918055b0ab93d954cc75",
+    "include/libcamera/libcamera/ipa/ipa_controls.h": "82e73e8cc6b217bb16ce05c9be41c0e2ff763d2e33e014b1b8cb23f5a3d4ec76",
+    "include/libcamera/libcamera/ipa/soft_ipa_interface.h": "26c6423bbd659811d05e89c38835d91fb06e7c332a5b5a353ee394c3bacdfb04",
+    "include/libcamera/libcamera/ipa/core_ipa_interface.h": "41bc4f0faa0ff7e8a72a644aad86764e15fb836b12ad48912500b0e61b0855e0",
+    "lib64/pkgconfig/libcamera.pc": "1f729eff02001d8c28c216cee296dbded72aee96b1adac13f44bdc662cda6baf",
+    "lib64/pkgconfig/libcamera-base.pc": "9f361890db07126a867cc394d1be098e278b961d4c4998fa17d93ac5ec2d5c5c",
+    "lib64/libcamera/ipa/ipa_soft_simple.so": "f43a19cf1618ec398c3e8afd2f9a72b36ebe8d03e434249a0418e49b7d030112",
+    "lib64/libcamera/ipa/ipa_soft_simple.so.sign": "d0164540e91b3216b9f692816c7d4f1b3baf1953d3281fadb0734de2faa11d3a",
+    "lib64/spa-0.2/libcamera/libspa-libcamera.so": "742c123dcc67bd8159cae18049537b010d86bdc6ee47faf6d98a56392192186e",
+    "libexec/libcamera/v4l2-compat.so": "e0d4e614f54ffc1f7b13947cf44aa1bb39cd94eca9435f2306e5d80af1cd11bc",
+    "libexec/libcamera/soft_ipa_proxy": "e4e63364dae4df6536f90fe3e1274f798c4aa26a8b7f7b3def96d4029cd9cdde",
+    "share/libcamera/ipa/simple/uncalibrated.yaml": "0689579ca79036bbd31d104deafca70fb8b267c4c8f8492e07bd6f6e875ee1ac",
+    "share/libcamera/ipa/simple/ov8865.yaml": "ce34ac6e46aed707ee73b1c04806294cc325216c315dc392237bc48d65875a4a"
+  },
+  "staged_manifest": {
+    "camera_prefix": "/tmp/sp7-f43-candidate/prefix/camera",
+    "runtime_prefix": "/home/peter/.local/lib/sp7-camera-userspace/f43-20261018",
+    "environment": {
+      "LD_LIBRARY_PATH": "/home/peter/.local/lib/sp7-camera-userspace/f43-20261018/lib64",
+      "SPA_PLUGIN_DIR": "/home/peter/.local/lib/sp7-camera-userspace/f43-20261018/lib64/spa-0.2:/usr/lib64/spa-0.2",
+      "LIBCAMERA_IPA_MODULE_PATH": "/home/peter/.local/lib/sp7-camera-userspace/f43-20261018/lib64/libcamera/ipa",
+      "LIBCAMERA_IPA_CONFIG_PATH": "/home/peter/.local/lib/sp7-camera-userspace/f43-20261018/share/libcamera/ipa",
+      "LIBCAMERA_IPA_PROXY_PATH": "/home/peter/.local/lib/sp7-camera-userspace/f43-20261018/libexec/libcamera",
+      "LIBCAMERA_SOFTISP_MODE": "cpu",
+      "LIBCAMERA_SOFTISP_VFLIP": "1",
+      "LIBCAMERA_SP7_OV8865_MODE": "15"
+    },
+    "required_files": {
+      "lib64/libcamera.so.0.7": "187274386afef0ae21704eb863e43afd6692185cb097495209d2a3b6325d50b0",
+      "lib64/libcamera-base.so.0.7": "fef2f0f934cd59fa36d4b93d401545118fbe54baf58ed2dac96487666135e3ab",
+      "lib64/libcamera/ipa/ipa_soft_simple.so": "f43a19cf1618ec398c3e8afd2f9a72b36ebe8d03e434249a0418e49b7d030112",
+      "lib64/spa-0.2/libcamera/libspa-libcamera.so": "742c123dcc67bd8159cae18049537b010d86bdc6ee47faf6d98a56392192186e",
+      "share/libcamera/ipa/simple/ov8865.yaml": "ce34ac6e46aed707ee73b1c04806294cc325216c315dc392237bc48d65875a4a",
+      "libexec/libcamera/soft_ipa_proxy": "e4e63364dae4df6536f90fe3e1274f798c4aa26a8b7f7b3def96d4029cd9cdde"
+    },
+    "files": {
+      "config/sp7-camera/userspace.env": "2353c28b28e4ab51881ad2762ed018e71156d44f40e63cc5918892b3e65a904b",
+      "config/systemd/user/wireplumber.service.d/99-zz-sp7-camera-userspace.conf": "fab5b0576cc11eb80902cdd7e99da7cfd12d6d1b3f5c212b0a965d93a8cf4ef9",
+      "config/systemd/user/pipewire.service.d/99-zz-sp7-camera-userspace.conf": "fab5b0576cc11eb80902cdd7e99da7cfd12d6d1b3f5c212b0a965d93a8cf4ef9",
+      "config/wireplumber/wireplumber.conf.d/98-sp7-camera-seat.conf": "4e2b56e90b173c2ca6d03af9370d812af5bad238509d5944515a952d829204fe",
+      "data/wireplumber/scripts/sp7/libcamera-seat-monitor.lua": "55048f4d0622596a35eb112062d3cb23f98b3807380852afece774bc73313722"
+    },
+    "deployment_performed": false
+  },
+  "rpm_artifacts": [
+    {
+      "nevra": "alsa-lib-1.2.14-4.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/alsa-lib-1.2.14-4.fc43.x86_64.rpm",
+      "sha256": "0f435334f697e08bcfad495c6d900ccbc9a0dcfa890c4c399303fbde4be418ad",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/alsa-lib-1.2.14-4.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "alsa-lib-1.2.16.1-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/alsa-lib-1.2.16.1-1.fc43.x86_64.rpm",
+      "sha256": "70fcdffad9b076cb942e3dc9ab16ae9c7e0b06ec93d4077c196bcfb29463add0",
+      "verification": "/tmp/sp7-f43-rpm-review/target/alsa-lib-1.2.16.1-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-1.4.8-2.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/pipewire-1.4.8-2.fc43.x86_64.rpm",
+      "sha256": "8a7b9cc1774358829a0d0be8c0076a3bf225f635450504762f79423b64e3850b",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/pipewire-1.4.8-2.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-1.4.11-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/pipewire-1.4.11-1.fc43.x86_64.rpm",
+      "sha256": "da95fd3bf6a62b0ac47e764ae6425f26ffa106962b9d9f29f9556a1bd45b0e1e",
+      "verification": "/tmp/sp7-f43-rpm-review/target/pipewire-1.4.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-alsa-1.4.8-2.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/pipewire-alsa-1.4.8-2.fc43.x86_64.rpm",
+      "sha256": "04b5f5dd6bceaaadd8e32cbd05210fef436a63465d54013cc73c1f1101160937",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/pipewire-alsa-1.4.8-2.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-alsa-1.4.11-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/pipewire-alsa-1.4.11-1.fc43.x86_64.rpm",
+      "sha256": "be762abaef0eabe0039a977d63d8427f42ddb3b8d95bec68b6630de83a346220",
+      "verification": "/tmp/sp7-f43-rpm-review/target/pipewire-alsa-1.4.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-config-raop-1.4.8-2.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/pipewire-config-raop-1.4.8-2.fc43.x86_64.rpm",
+      "sha256": "edc647293a3842bda86a1decbbd56481bee08bf4f3df41080bffd6c39603fd99",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/pipewire-config-raop-1.4.8-2.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-config-raop-1.4.11-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/pipewire-config-raop-1.4.11-1.fc43.x86_64.rpm",
+      "sha256": "abd573694b1cf25df48e33d5b9e9517f1ce1df79962f4625368d4a55170de173",
+      "verification": "/tmp/sp7-f43-rpm-review/target/pipewire-config-raop-1.4.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-gstreamer-1.4.8-2.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/pipewire-gstreamer-1.4.8-2.fc43.x86_64.rpm",
+      "sha256": "d0ca899685d97d99c44980884388d7eeb1ed53134cca598074877303be99093f",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/pipewire-gstreamer-1.4.8-2.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-gstreamer-1.4.11-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/pipewire-gstreamer-1.4.11-1.fc43.x86_64.rpm",
+      "sha256": "529caadde19efff80c073adffef8fbe64e5229a5b2d01c9c0d4af3a1bdd3ef60",
+      "verification": "/tmp/sp7-f43-rpm-review/target/pipewire-gstreamer-1.4.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-jack-audio-connection-kit-1.4.8-2.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/pipewire-jack-audio-connection-kit-1.4.8-2.fc43.x86_64.rpm",
+      "sha256": "dcfc1da3ec934589ae1a52ab62ef491698799fa700e7c9b07cee37b7a2befaf7",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/pipewire-jack-audio-connection-kit-1.4.8-2.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-jack-audio-connection-kit-1.4.11-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/pipewire-jack-audio-connection-kit-1.4.11-1.fc43.x86_64.rpm",
+      "sha256": "3211a46a687af1abe67febfe03dfbba8cc0353de19d77e161d71fb2e3ed8c3d3",
+      "verification": "/tmp/sp7-f43-rpm-review/target/pipewire-jack-audio-connection-kit-1.4.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-jack-audio-connection-kit-libs-1.4.8-2.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/pipewire-jack-audio-connection-kit-libs-1.4.8-2.fc43.x86_64.rpm",
+      "sha256": "ef6472fac083a259f0f97949d9f3bc1cbcd1fb465512e44d3890f888867043be",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/pipewire-jack-audio-connection-kit-libs-1.4.8-2.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-jack-audio-connection-kit-libs-1.4.11-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/pipewire-jack-audio-connection-kit-libs-1.4.11-1.fc43.x86_64.rpm",
+      "sha256": "25f7ba0c6b3087110e87a5525a219b4c452d0211ffa815778e1ae6c182c5d28d",
+      "verification": "/tmp/sp7-f43-rpm-review/target/pipewire-jack-audio-connection-kit-libs-1.4.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-libs-1.4.8-2.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/pipewire-libs-1.4.8-2.fc43.x86_64.rpm",
+      "sha256": "9658ca79f4562fd18af9834812aca1e1ffee79d0be5209f82156e415d8aa5927",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/pipewire-libs-1.4.8-2.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-libs-1.4.11-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/pipewire-libs-1.4.11-1.fc43.x86_64.rpm",
+      "sha256": "5534db54c880fe0fb50974d12638e60a547700e1260837696c93442e96debe06",
+      "verification": "/tmp/sp7-f43-rpm-review/target/pipewire-libs-1.4.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-plugin-libcamera-1.4.8-2.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/pipewire-plugin-libcamera-1.4.8-2.fc43.x86_64.rpm",
+      "sha256": "5d11acdb607e424974ce3ca1c2ee6eb8d5f85fe55634c0a1ea81fd771f6f66fc",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/pipewire-plugin-libcamera-1.4.8-2.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-plugin-libcamera-1.4.11-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/pipewire-plugin-libcamera-1.4.11-1.fc43.x86_64.rpm",
+      "sha256": "a0776b4daa46fdf6cf16a7570a150f67cc2b8bc800f82b5202387009310d5982",
+      "verification": "/tmp/sp7-f43-rpm-review/target/pipewire-plugin-libcamera-1.4.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-pulseaudio-1.4.8-2.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/pipewire-pulseaudio-1.4.8-2.fc43.x86_64.rpm",
+      "sha256": "63f2467a54b6cc49d3945e0d7307904c03cb0cfce1154cc820b2e6731c126271",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/pipewire-pulseaudio-1.4.8-2.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-pulseaudio-1.4.11-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/pipewire-pulseaudio-1.4.11-1.fc43.x86_64.rpm",
+      "sha256": "2a0b7f31f8f6d4c6e38d31cdce76c19160753e04f9539088799d93e547dd0e31",
+      "verification": "/tmp/sp7-f43-rpm-review/target/pipewire-pulseaudio-1.4.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-utils-1.4.8-2.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/pipewire-utils-1.4.8-2.fc43.x86_64.rpm",
+      "sha256": "dfade44a2cbc0db8bf90187fea7e4dd9fcb61a5befc5d7c7e795d42132bbbfff",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/pipewire-utils-1.4.8-2.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "pipewire-utils-1.4.11-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/pipewire-utils-1.4.11-1.fc43.x86_64.rpm",
+      "sha256": "09de754f108e7cff02fa0371467b02cc3dd0c0627445e7023343c5f2aa5c678b",
+      "verification": "/tmp/sp7-f43-rpm-review/target/pipewire-utils-1.4.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "wireplumber-0.5.11-1.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/wireplumber-0.5.11-1.fc43.x86_64.rpm",
+      "sha256": "9ced0369ee575710862819f3003981a4acd69d84d39cd927e9becb7f6692e2e4",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/wireplumber-0.5.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "wireplumber-0.5.14-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/wireplumber-0.5.14-1.fc43.x86_64.rpm",
+      "sha256": "ea7b506f55c25485780d767736c5c13d44e939f7ee06329b93de8abe4059c3ad",
+      "verification": "/tmp/sp7-f43-rpm-review/target/wireplumber-0.5.14-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "wireplumber-libs-0.5.11-1.fc43.x86_64",
+      "kind": "installed",
+      "file": "/tmp/sp7-f43-rpm-review/rollback/wireplumber-libs-0.5.11-1.fc43.x86_64.rpm",
+      "sha256": "16381237f4acceb887c6a6e5719f88880089ccad5d1586f4d57a9a0816f77768",
+      "verification": "/tmp/sp7-f43-rpm-review/rollback/wireplumber-libs-0.5.11-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    },
+    {
+      "nevra": "wireplumber-libs-0.5.14-1.fc43.x86_64",
+      "kind": "target",
+      "file": "/tmp/sp7-f43-rpm-review/target/wireplumber-libs-0.5.14-1.fc43.x86_64.rpm",
+      "sha256": "4e22c0d802fe1b44adbc4de2cf5a555d6351f09256ba880c415f5f901fa2bb16",
+      "verification": "/tmp/sp7-f43-rpm-review/target/wireplumber-libs-0.5.14-1.fc43.x86_64.rpm: digests signatures OK\n",
+      "verify_returncode": 0
+    }
+  ],
+  "checks": {
+    "isolated_linkage_and_symbols": true,
+    "exact_fedora_rpm_versions_and_linkage": true,
+    "systemd_syntax_synthetic_units": true,
+    "offline_transaction_exactly_13_upgrades": true,
+    "existing_camera_patch_files_unchanged": true,
+    "live_camera_library_hashes_unchanged": true,
+    "protected_rtsp_hashes_unchanged": true
+  },
+  "limitations": [
+    "Source-built inspection PipeWire has D-Bus disabled",
+    "Source-built inspection WirePlumber uses bundled Lua 5.5; Fedora RPM Lua 5.4 module inspected separately",
+    "No capture or audio runtime validation until approved deployment"
+  ]
+}
