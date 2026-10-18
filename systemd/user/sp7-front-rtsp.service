@@ -1,0 +1,20 @@
+[Unit]
+Description=Surface Pro 7 session-gated Front Standard RTSP
+PartOf=graphical-session.target
+After=pipewire.service wireplumber.service
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=simple
+Environment=PYTHONUNBUFFERED=1
+Environment=DISABLE_RTKIT=1
+ExecStart=%h/.local/libexec/sp7-rtsp-session --server %h/surface-pro-7-camera/src/sp7-front-rtsp
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=15
+KillMode=control-group
+SyslogIdentifier=sp7-front-rtsp
+
+[Install]
+WantedBy=graphical-session.target
