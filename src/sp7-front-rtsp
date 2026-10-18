@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+"""Serve continuous Front Standard capture as shared H.264 RTSP/TCP."""
+import argparse
+import logging
+import os
+import signal
+import socket
+import sys
+import time
+
+import gi
+
+gi.require_version('Gst', '1.0')
+gi.require_version('GstRtsp', '1.0')
+gi.require_version('GstRtspServer', '1.0')
+from gi.repository import GLib, Gst, GstRtsp, GstRtspServer
+
+
+def notify(message):
+    address = os.environ.get('NOTIFY_SOCKET')
+    if not address:
+        return
+    if address.startswith('@'):
+        address = '\0' + address[1:]
+    with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as sock:
+        sock.connect(address)
+        sock.sendall(message.encode())
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--address', default='0.0.0.0')
+    parser.add_argument('--port', type=int, default=8554)
+    parser.add_argument('--mount', default='/front-standard')
+    parser.add_argument('--fps', type=int, default=15)
+    parser.add_argument('--bitrate', type=int, default=2500000)
+    parser.add_argument('--log-file')
+    args = parser.parse_args()
+    if not 1 <= args.port <= 65535 or not 1 <= args.fps <= 30 or args.bitrate <= 0:
+        parser.error('invalid port, frame rate, or bitrate')
+    if not args.mount.startswith('/') or any(c.isspace() for c in args.mount):
+        parser.error('mount must be an absolute RTSP path without whitespace')
+    handlers = [logging.StreamHandler()]
+    if args.log_file:
+        handlers.append(logging.FileHandler(args.log_file))
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s',
+                        handlers=handlers)
+    Gst.init(None)
+    required = ['pipewiresrc', 'videorate', 'videoconvert', 'videoflip',
+                'intervideosink', 'intervideosrc', 'openh264enc', 'h264parse', 'rtph264pay']
+    missing = [name for name in required if Gst.ElementFactory.find(name) is None]
+    if missing:
+        logging.error('Missing GStreamer elements: %s', ', '.join(missing))
+        return 1
+
+    channel = f'sp7-front-standard-{os.getpid()}'
+    capture = Gst.parse_launch(
+        'pipewiresrc target-object=sp7.front.standard do-timestamp=true ! '
+        'video/x-raw,format=RGBx,width=1292,height=972,framerate=30/1 ! '
+        'queue leaky=downstream max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! '
+        f'videorate drop-only=true ! video/x-raw,framerate={args.fps}/1 ! '
+        'videoconvert ! videoflip video-direction=auto ! video/x-raw,format=I420 ! '
+        f'intervideosink name=capture_output channel={channel} sync=false')
+    launch = (
+        f'( intervideosrc channel={channel} timeout=10000000000 ! '
+        'queue max-size-buffers=3 max-size-bytes=0 max-size-time=0 ! '
+        f'video/x-raw,format=I420,width=1292,height=972,framerate={args.fps}/1 ! '
+        f'openh264enc bitrate={args.bitrate} rate-control=bitrate complexity=low '
+        f'gop-size={args.fps * 2} ! h264parse ! '
+        'video/x-h264,stream-format=byte-stream,alignment=au,profile=constrained-baseline ! '
+        'rtph264pay name=pay0 pt=96 config-interval=1 aggregate-mode=none )')
+    loop = GLib.MainLoop()
+    failed = False
+    frame_count = 0
+    last_frame = None
+    first_frame = None
+    ready = False
+    started = time.monotonic()
+
+    def on_capture(pad, info):
+        nonlocal frame_count, last_frame, first_frame
+        if not info.get_buffer().has_flags(Gst.BufferFlags.CORRUPTED):
+            frame_count += 1
+            last_frame = time.monotonic()
+            if first_frame is None:
+                first_frame = last_frame
+        return Gst.PadProbeReturn.OK
+
+    capture.get_by_name('capture_output').get_static_pad('sink').add_probe(
+        Gst.PadProbeType.BUFFER, on_capture)
+
+    def on_message(owner, message):
+        nonlocal failed
+        if message.type == Gst.MessageType.ERROR:
+            error, details = message.parse_error()
+            logging.error('Media error from %s: %s; %s', message.src.get_name(), error, details)
+            failed = True
+            loop.quit()
+        elif message.type == Gst.MessageType.WARNING:
+            warning, details = message.parse_warning()
+            logging.warning('Media warning: %s; %s', warning, details)
+        return True
+
+    # This bus belongs to our independent capture pipeline, not RTSPMedia.
+    capture.get_bus().add_signal_watch()
+    capture.get_bus().connect('message', on_message)
+
+    def on_media_configure(factory, media):
+        logging.info('Preparing shared RTSP encoding session; camera capture stays running')
+        # RTSPMedia owns its bus watch; observe after its default handler.
+        media.connect_after('handle-message', on_message)
+        prepared = False
+
+        def on_prepared(media):
+            nonlocal prepared
+            prepared = True
+            logging.info('RTSP encoding session prepared')
+
+        def on_unprepared(media):
+            nonlocal failed
+            logging.info('RTSP encoding session unprepared; camera capture stays running')
+            if not prepared:
+                logging.error('RTSP media never prepared; restarting service')
+                failed = True
+                loop.quit()
+
+        media.connect('prepared', on_prepared)
+        media.connect('unprepared', on_unprepared)
+
+    server = GstRtspServer.RTSPServer.new()
+    server.set_address(args.address)
+    server.set_service(str(args.port))
+    factory = GstRtspServer.RTSPMediaFactory.new()
+    factory.set_launch(launch)
+    factory.set_shared(True)
+    factory.set_protocols(GstRtsp.RTSPLowerTrans.TCP)
+    factory.set_latency(100)
+    factory.connect('media-configure', on_media_configure)
+    server.get_mount_points().add_factory(args.mount, factory)
+
+    def health_check():
+        nonlocal failed, ready
+        now = time.monotonic()
+        if not ready and frame_count >= args.fps * 2 and now - first_frame >= 2:
+            if not server.attach(None):
+                logging.error('Could not listen on %s:%s', args.address, args.port)
+                failed = True
+                loop.quit()
+                return False
+            ready = True
+            notify('READY=1\nSTATUS=Front Standard capture and RTSP endpoint ready')
+            logging.info('RTSP ready: rtsp://%s:%s%s; H.264 1292x972 %s fps %s bit/s; TCP',
+                         args.address, args.port, args.mount, args.fps, args.bitrate)
+        if ((not ready and now - started > 35) or
+                (ready and last_frame is not None and now - last_frame > 5)):
+            logging.error('Camera frame delivery stalled; restarting service (frames=%s)', frame_count)
+            failed = True
+            loop.quit()
+            return False
+        return True
+
+    GLib.timeout_add(250, health_check)
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, sig, lambda: (loop.quit(), False)[1])
+    logging.info('Starting continuous Front Standard capture; waiting for frames')
+    notify('STATUS=Waiting for Front Standard camera frames')
+    try:
+        capture.set_state(Gst.State.PLAYING)
+        loop.run()
+    finally:
+        capture.set_state(Gst.State.NULL)
+        logging.info('RTSP server stopped; captured %s frames', frame_count)
+    return 1 if failed else 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
