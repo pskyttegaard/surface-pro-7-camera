@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+"""Build camera/userspace candidates into isolated prefixes; never deploy."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import tarfile
+
+ROOT = Path(__file__).resolve().parents[1]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--workspace', type=Path, required=True)
+parser.add_argument('--source-cache', type=Path, help='Read-only directory of <component>.git repositories')
+parser.add_argument('--jobs', type=int, default=2)
+args = parser.parse_args()
+work = args.workspace.resolve()
+if not work.is_relative_to(Path('/tmp')) or args.jobs < 1:
+    parser.error('Use an isolated /tmp workspace and positive job count')
+work.mkdir(parents=True, exist_ok=True)
+logs = work / 'logs'
+logs.mkdir(exist_ok=True)
+camera = work / 'prefix/camera'
+userspace = work / 'prefix/userspace'
+sources = json.loads((ROOT / 'config/camera-userspace-sources.json').read_text())
+report = dict(sources=sources, camera_prefix=str(camera), userspace_prefix=str(userspace),
+              components={}, complete=False)
+
+
+def run(command, log, env=None):
+    with (logs / log).open('a') as stream:
+        stream.write('\n$ ' + ' '.join(map(str, command)) + '\n')
+        stream.flush()
+        result = subprocess.run(list(map(str, command)), stdout=stream,
+                                stderr=subprocess.STDOUT, env=env)
+    if result.returncode:
+        raise RuntimeError(f'Failed ({result.returncode}); see {logs / log}')
+
+
+def export(name):
+    source = work / 'sources' / name
+    if source.exists():
+        return source
+    source.mkdir(parents=True)
+    cache = args.source_cache / (name + '.git') if args.source_cache else None
+    if cache and cache.is_dir():
+        repo = cache
+    else:
+        repo = work / 'repositories' / name
+        run(['git', 'init', '--bare', repo], name + '.source.log')
+        run(['git', '-C', repo, 'fetch', '--depth=1', sources[name]['url'],
+             sources[name]['commit']], name + '.source.log')
+    archive = work / (name + '.tar')
+    run(['git', '-C', repo, 'archive', sources[name]['commit'], '-o', archive], name + '.source.log')
+    with tarfile.open(archive) as stream:
+        stream.extractall(source, filter='data')
+    for patch in sorted((ROOT / 'patches' / name).glob('*.patch')):
+        run(['patch', '--batch', '--forward', '--fuzz=0', '-d', source,
+             '-p1', '-i', patch], name + '.source.log')
+    return source
+
+
+def build(name, prefix, options, env):
+    source = export(name)
+    directory = work / 'build' / name
+    log = name + '.build.log'
+    if not (directory / 'build.ninja').exists():
+        run(['meson', 'setup', directory, source, '--prefix=' + str(prefix),
+             '--libdir=lib64', '--libexecdir=libexec', '--sysconfdir=etc',
+             '--buildtype=debugoptimized', '--wrap-mode=nodownload', *options], log, env)
+    run(['ninja', '-C', directory, '-j' + str(args.jobs)], log, env)
+    installed = subprocess.check_output(['meson', 'introspect', '--installed', directory], text=True)
+    for destination in json.loads(installed).values():
+        if not Path(destination).is_relative_to(prefix):
+            raise RuntimeError('Refusing install outside isolated prefix: ' + destination)
+    run(['meson', 'install', '-C', directory, '--no-rebuild'], log, env)
+    report['components'][name] = dict(built=True, build_directory=str(directory), log=str(logs / log))
+    (work / 'build-report.json').write_text(json.dumps(report, indent=2) + '\n')
+
+
+env = os.environ.copy()
+env.pop('PKG_CONFIG_SYSROOT_DIR', None)
+# Do not let the working custom /usr/local build supply libcamera headers/libs.
+env['PKG_CONFIG_PATH'] = str(camera / 'lib64/pkgconfig')
+build('libcamera', camera, ['-Dpipelines=simple', '-Dipas=simple', '-Dcam=enabled',
+      '-Dqcam=disabled', '-Ddocumentation=disabled', '-Dtest=false',
+      '-Dgstreamer=disabled', '-Dpycamera=disabled', '-Dlc-compliance=disabled',
+      '-Dsoftisp-gpu=disabled'], env)
+tuning = camera / 'share/libcamera/ipa/simple/ov8865.yaml'
+tuning.parent.mkdir(parents=True, exist_ok=True)
+tuning.write_bytes((work / 'sources/libcamera/src/ipa/simple/data/ov8865.yaml').read_bytes())
+build('pipewire', userspace, ['-Dauto_features=disabled', '-Dlibcamera=enabled',
+      '-Dgstreamer=enabled', '-Dgstreamer-device-provider=enabled', '-Ddbus=disabled',
+      '-Dsystemd=disabled', '-Dlogind=disabled', '-Dpipewire-jack=disabled',
+      '-Dpipewire-v4l2=disabled', '-Dtests=disabled', '-Dexamples=disabled',
+      '-Ddocs=disabled', '-Dman=disabled', '-Dsession-managers=[]'], env)
+spa = camera / 'lib64/spa-0.2/libcamera/libspa-libcamera.so'
+spa.parent.mkdir(parents=True, exist_ok=True)
+spa.write_bytes((userspace / 'lib64/spa-0.2/libcamera/libspa-libcamera.so').read_bytes())
+spa.chmod(0o755)
+env['PKG_CONFIG_PATH'] = str(userspace / 'lib64/pkgconfig') + ':' + str(camera / 'lib64/pkgconfig')
+# Lua's source and Meson wrap are downloaded only into this build workspace.
+# The upstream wrap pins SHA256 for both archives. No packages are installed.
+wp = export('wireplumber')
+run(['meson', 'subprojects', 'download', '--sourcedir', wp, 'lua'], 'wireplumber.source.log', env)
+build('wireplumber', userspace, ['-Ddoc=disabled', '-Dtests=false',
+      '-Ddbus-tests=false', '-Dintrospection=disabled', '-Dsystem-lua=false',
+      '-Dsystemd=enabled', '-Delogind=disabled',
+      '-Dsystemd-user-unit-dir=' + str(userspace / 'share/systemd/user'),
+      '-Dsystemd-system-unit-dir=' + str(userspace / 'share/systemd/system')], env)
+report['complete'] = True
+report['camera_files'] = {
+    str(p.relative_to(camera)): hashlib.sha256(p.read_bytes()).hexdigest()
+    for p in camera.rglob('*') if p.is_file() and not p.is_symlink()
+}
+(work / 'build-report.json').write_text(json.dumps(report, indent=2) + '\n')
+print(work / 'build-report.json')

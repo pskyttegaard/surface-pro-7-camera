@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""Generate reviewable camera service configuration; never deploy or restart."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import shlex
+
+ROOT = Path(__file__).resolve().parents[1]
+p = argparse.ArgumentParser(description=__doc__)
+p.add_argument('--camera-prefix', required=True, type=Path, help='Built camera-only prefix')
+p.add_argument('--runtime-prefix', type=Path, help='Future deployment path; defaults to built prefix')
+p.add_argument('--output', required=True, type=Path, help='Empty staging directory under /tmp')
+a = p.parse_args()
+camera = a.camera_prefix.resolve()
+runtime = (a.runtime_prefix or camera).absolute()
+out = a.output.resolve()
+if not out.is_relative_to(Path('/tmp')) or out.exists():
+    p.error('output must be a new staging directory under /tmp')
+if any(c in str(runtime) for c in '\n\r\0') or not runtime.is_absolute():
+    p.error('runtime prefix must be an absolute, single-line path')
+required = ['lib64/libcamera.so.0.7', 'lib64/libcamera-base.so.0.7',
+            'lib64/libcamera/ipa/ipa_soft_simple.so',
+            'lib64/spa-0.2/libcamera/libspa-libcamera.so',
+            'share/libcamera/ipa/simple/ov8865.yaml',
+            'libexec/libcamera/soft_ipa_proxy']
+for name in required:
+    if not (camera / name).is_file():
+        p.error('incomplete camera prefix: ' + name)
+# This environment must not replace Fedora PipeWire/WirePlumber audio libraries.
+if list((camera / 'lib64').glob('libpipewire*')) or list((camera / 'lib64').glob('libwireplumber*')):
+    p.error('camera-only prefix must not contain PipeWire or WirePlumber libraries')
+environment = {}
+for line in (ROOT / 'config/camera-userspace/userspace.env.in').read_text().splitlines():
+    key, value = line.split('=', 1)
+    environment[key] = value.replace('@CAMERA_PREFIX@', str(runtime))
+files = {
+    'sp7-camera/userspace.env': ''.join(k + '=' + shlex.quote(v) + '\n' for k, v in environment.items()),
+}
+for service in ['pipewire', 'wireplumber']:
+    files[f'systemd/user/{service}.service.d/99-zz-sp7-camera-userspace.conf'] = (
+        ROOT / 'config/camera-userspace/99-zz-sp7-camera-userspace.conf').read_text()
+
+for name in ['wireplumber/wireplumber.conf.d/98-sp7-camera-seat.conf']:
+    files[name] = (ROOT / 'config' / name).read_text()
+for name, text in files.items():
+    target = out / 'config' / name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text)
+# Lua scripts live in XDG_DATA_HOME, not XDG_CONFIG_HOME.
+lua = out / 'data/wireplumber/scripts/sp7/libcamera-seat-monitor.lua'
+lua.parent.mkdir(parents=True)
+lua.write_bytes((ROOT / 'config/wireplumber/scripts/sp7/libcamera-seat-monitor.lua').read_bytes())
+manifest = dict(camera_prefix=str(camera), runtime_prefix=str(runtime),
+                environment=environment, required_files={
+                    name: hashlib.sha256((camera / name).read_bytes()).hexdigest() for name in required},
+                files={str(f.relative_to(out)): hashlib.sha256(f.read_bytes()).hexdigest()
+                       for f in out.rglob('*') if f.is_file()},
+                deployment_performed=False)
+(out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+print(out / 'manifest.json')

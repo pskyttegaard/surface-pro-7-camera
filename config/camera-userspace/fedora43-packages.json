@@ -1,0 +1,68 @@
+[
+  {
+    "name": "alsa-lib",
+    "installed": "alsa-lib-1.2.14-4.fc43.x86_64",
+    "target": "alsa-lib-1.2.16.1-1.fc43.x86_64",
+    "reason": "pipewire-alsa requires libasound.so.2(ALSA_1.2.15); solver selects this version"
+  },
+  {
+    "name": "pipewire",
+    "installed": "pipewire-1.4.8-2.fc43.x86_64",
+    "target": "pipewire-1.4.11-1.fc43.x86_64"
+  },
+  {
+    "name": "pipewire-alsa",
+    "installed": "pipewire-alsa-1.4.8-2.fc43.x86_64",
+    "target": "pipewire-alsa-1.4.11-1.fc43.x86_64"
+  },
+  {
+    "name": "pipewire-config-raop",
+    "installed": "pipewire-config-raop-1.4.8-2.fc43.x86_64",
+    "target": "pipewire-config-raop-1.4.11-1.fc43.x86_64"
+  },
+  {
+    "name": "pipewire-gstreamer",
+    "installed": "pipewire-gstreamer-1.4.8-2.fc43.x86_64",
+    "target": "pipewire-gstreamer-1.4.11-1.fc43.x86_64"
+  },
+  {
+    "name": "pipewire-jack-audio-connection-kit",
+    "installed": "pipewire-jack-audio-connection-kit-1.4.8-2.fc43.x86_64",
+    "target": "pipewire-jack-audio-connection-kit-1.4.11-1.fc43.x86_64"
+  },
+  {
+    "name": "pipewire-jack-audio-connection-kit-libs",
+    "installed": "pipewire-jack-audio-connection-kit-libs-1.4.8-2.fc43.x86_64",
+    "target": "pipewire-jack-audio-connection-kit-libs-1.4.11-1.fc43.x86_64"
+  },
+  {
+    "name": "pipewire-libs",
+    "installed": "pipewire-libs-1.4.8-2.fc43.x86_64",
+    "target": "pipewire-libs-1.4.11-1.fc43.x86_64"
+  },
+  {
+    "name": "pipewire-plugin-libcamera",
+    "installed": "pipewire-plugin-libcamera-1.4.8-2.fc43.x86_64",
+    "target": "pipewire-plugin-libcamera-1.4.11-1.fc43.x86_64"
+  },
+  {
+    "name": "pipewire-pulseaudio",
+    "installed": "pipewire-pulseaudio-1.4.8-2.fc43.x86_64",
+    "target": "pipewire-pulseaudio-1.4.11-1.fc43.x86_64"
+  },
+  {
+    "name": "pipewire-utils",
+    "installed": "pipewire-utils-1.4.8-2.fc43.x86_64",
+    "target": "pipewire-utils-1.4.11-1.fc43.x86_64"
+  },
+  {
+    "name": "wireplumber",
+    "installed": "wireplumber-0.5.11-1.fc43.x86_64",
+    "target": "wireplumber-0.5.14-1.fc43.x86_64"
+  },
+  {
+    "name": "wireplumber-libs",
+    "installed": "wireplumber-libs-0.5.11-1.fc43.x86_64",
+    "target": "wireplumber-libs-0.5.14-1.fc43.x86_64"
+  }
+]
