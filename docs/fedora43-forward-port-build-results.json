@@ -1,4 +1,5 @@
 {
+  "record_scope": "Historical isolated pre-deployment build/inspection evidence; deployed and hardware_tested below describe that stage only. See fedora43-forward-port-hardware-acceptance.json for subsequent acceptance.",
   "date": "2026-10-18",
   "base_pr_head": "2eb4916295a9090694fca7cdb84d66c4db2b9e06",
   "deployed": false,
