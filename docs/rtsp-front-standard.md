@@ -1,8 +1,9 @@
 # Session-gated Front Standard RTSP — Fedora 43
 
-Implementation prepared on `codex/rtsp-fedora43-session`, based on frozen
-`467d1b2`. **Not deployed or enabled.** Accepted camera source, private prefix,
-seat policy, PipeWire/WirePlumber drop-ins and packages are unchanged.
+Implementation on `codex/rtsp-fedora43-session`, based on frozen `467d1b2`,
+was deployed and hardware-validated on 2026-10-18. Accepted camera source,
+private prefix, seat policy, PipeWire/WirePlumber drop-ins and packages remain
+unchanged.
 
 ## Runtime design
 
@@ -65,14 +66,11 @@ Lingering, the historical nine-device ACLs, udev rule and permission helper are
 left unchanged. This implementation does not require broader access or new
 permission grants. Permission cleanup is a separate future task.
 
-## Existing server and sharing limitation
+## Server, checker and sharing limitation
 
-The unchanged external server remains at
-`/home/peter/surface-pro-7-camera/src/sp7-front-rtsp`; the sustained checker remains
-at `/home/peter/surface-pro-7-camera/tools/check-rtsp-sustained.py`. Neither is in
-frozen commit 467d1b2, so this four-file branch depends on these existing local
-files. Do not move that checkout before arranging a separately reviewed install
-of the existing server/checker. Their reviewed SHA256 hashes are:
+The previously existing RTSP server and sustained checker are now tracked on
+this branch as `src/sp7-front-rtsp` and `tools/check-rtsp-sustained.py`. Their
+reviewed SHA256 hashes are:
 
 ```text
 6bfc7bfa1a855e4d691bbef0f2da616863e59c1fe18c706e785ccec01fd7864b  src/sp7-front-rtsp
@@ -89,9 +87,9 @@ of this implementation. The previous LAN URL was:
 rtsp://192.168.10.214:8554/front-standard
 ```
 
-Use the Surface's current LAN address in Synology Surveillance Station. Capture
-stays open even without RTSP viewers; reconnecting clients recreates encoding
-without reopening the sensor. All five logical sources must remain enumerated,
+Use the Surface's current LAN address from any RTSP-capable client or
+integration. Capture stays open even without RTSP viewers; reconnecting clients
+recreate encoding without reopening the sensor. All five logical sources must remain enumerated,
 but the shared IPU path does not support independent simultaneous profile use.
 Stop RTSP before using another camera/profile in GNOME Camera, then start it
 again when finished. Automatic desktop/RTSP arbitration is outside this change.
@@ -107,14 +105,12 @@ Tests use fake sessions, media-unit states and registry data. One synthetic chil
 only sends READY over a temporary Unix socket; it does not load GStreamer or
 connect to PipeWire/cameras. They cover eligibility, absent-source waiting,
 readiness, session/source loss, bounded retries, child cleanup and no-fallback
-properties. A separate systemd verification uses a staged executable path because
-the real guard is intentionally not yet installed. No capture validation is
-claimed by these tests. Preparation results: **23/23 tests passed**, staged
-systemd unit verification passed, and a read-only check confirmed recognition of
-the current local graphical session. RTSP stayed disabled/inactive with zero
-restarts; no server or real capture child was launched.
+properties. A separate systemd verification used a staged executable path before the
+hardware deployment. Preparation results were **23/23 tests passed**, staged
+systemd unit verification passed, and a read-only check confirmed recognition
+of the current local graphical session.
 
-## Proposed deployment — do not execute until approved
+## Validated deployment procedure
 
 Run as Peter in the local graphical session. These commands affect only the
 RTSP layer. They do not restart PipeWire/WirePlumber or change permissions.
@@ -191,12 +187,28 @@ DISABLE_RTKIT=1 python3 /home/peter/surface-pro-7-camera/tools/check-rtsp-sustai
   --output "$HOME/sp7-rtsp-validation/session-gated-first-soak"
 ```
 
-Next verify Synology TCP reconnects, seat switching/logout release, local login
-recovery, and a clean boot without capture before login. Stop RTSP and verify all
-five camera profiles and existing private/Fedora library separation. Do not
-restart media services as a recovery step; retain evidence and disable RTSP if
-these gates fail. Automatic lifecycle behavior remains hardware-unvalidated until
-these tests run. No reboot is authorized by this document alone.
+Hardware acceptance completed on 2026-10-18 without restarting PipeWire or
+WirePlumber as a recovery step:
+
+- initial RTSP startup reached `streaming`;
+- a 610-second localhost soak passed with 9159 frames, zero black frames, zero
+  timestamp regressions, 9159 unique frame hashes and approximately 15.0 fps;
+- a separate 30-second reconnect test passed;
+- logout stopped the service and released capture cleanly despite lingering;
+- local graphical login restarted capture and returned to `streaming`;
+- after reboot, SSH access before graphical login showed the enabled RTSP service
+  inactive with no journal entries, proving no pre-login capture;
+- local graphical login after reboot automatically restarted RTSP and reached
+  `streaming`;
+- an external LAN RTSP client accessed the endpoint successfully over TCP;
+- after stopping RTSP, all five logical PipeWire camera sources remained present,
+  while GNOME Camera continued to expose and operate the same four user-facing
+  profiles: Front Standard, Front HQ, Rear Standard and Rear HQ;
+- WirePlumber continued to load the private patched libcamera/SPA payload while
+  PipeWire and WirePlumber core libraries remained the Fedora system versions.
+
+The RTSP layer therefore passed the intended session-gating, reboot, reconnect,
+LAN-client and post-stop camera-regression checks.
 
 ## Disable and RTSP-only rollback
 
